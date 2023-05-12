@@ -128,13 +128,13 @@ async function startConsumers() {
                 const parsed = JSON.parse(message.value?.toString() || '{}');
 
                 const {
+                    workspace_id,
+                    document_id,
                     timestamp,
                     user_id,
                     task_title,
                     task_description,
                     task_column,
-                    workspace_id,
-                    team_id,
                 } = parsed;
 
                 const key = `${user_id}|${timestamp}`;
@@ -142,13 +142,18 @@ async function startConsumers() {
                 if (messagesBuffer.includes(key)) {
                     messagesBuffer.splice(messagesBuffer.indexOf(key), 1);
 
-                    await firestore.collection('documents').doc().set({
-                        title: task_title,
-                        description: task_description,
-                        status: task_column,
-                        ownerId: user_id,
+                    await firestore.collection('documents').add({
                         workspaceId: workspace_id,
-                        teamId: team_id,
+                        documentId: document_id,
+                        type: 'item',
+                        views: null,
+                        title: task_title,
+                        content: task_description,
+                        ownerId: user_id,
+                        properties: {
+                            status: task_column,
+                            assignee: [],
+                        },
                     });
 
                     console.log('Task created');
